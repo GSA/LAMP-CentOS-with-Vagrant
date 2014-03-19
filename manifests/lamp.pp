@@ -36,10 +36,23 @@ class iptables {
 }
 
 
+
+# Install git
+
+class git {
+
+  package{'git':
+    ensure=>present,
+  }
+
+}
+
+
+
 class misc {
 
   exec { "grap-epel":
-    command => "/bin/rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-7.noarch.rpm",
+    command => "/bin/rpm -Uvh http://fedora-epel.mirror.lstn.net/6/x86_64/epel-release-6-8.noarch.rpm",
     creates => "/etc/yum.repos.d/epel.repo",
     alias   => "grab-epel",
   }
@@ -157,14 +170,29 @@ class phpdev {
   }
 }
 
+
+#Install MySQL
+
 class mysql {
 
-  package { "mysql-server":
-    ensure  => present,
+  $password = 'vagrant'
+
+  package { [
+      'mysql',
+      'mysql-server',
+    ]:
+    ensure => installed,
   }
 
-  package { "mysql":
-    ensure  => present,
+  exec { 'Set MySQL server\'s root password':
+    subscribe   => [
+      Package['mysql-server'],
+      Package['mysql'],
+    ],
+    refreshonly => true,
+    unless      => "mysqladmin -uroot -p${password} status",
+    path        => '/bin:/usr/bin',
+    command     => "mysqladmin -uroot password ${password}",
   }
 
   service { "mysqld":
@@ -172,72 +200,34 @@ class mysql {
     require => Package["mysql-server"]
   }
 
+
 }
+
+
+
+# Install PHP
 
 class php {
 
-  package { "php":
-    ensure  => present,
-  }
-
-  package { "php-cli":
-    ensure  => present,
-  }
-
-  package { "php-common":
-    ensure  => present,
-  }
-
-  package { "php-devel":
-    ensure  => present,
-  }
-
-  package { "php-gd":
-    ensure  => present,
-  }
-
-  package { "php-mcrypt":
-    ensure  => present,
-  }
-
-  package { "php-intl":
-    ensure  => present,
-  }
-
-  package { "php-ldap":
-    ensure  => present,
-  }
-
-  package { "php-mbstring":
-    ensure  => present,
-  }
-
-  package { "php-mysql":
-    ensure  => present,
-  }
-
-  package { "php-pdo":
-    ensure  => present,
-  }
-
-  package { "php-pear":
-    ensure  => present,
-  }
-
-  package { "php-pecl-apc":
-    ensure  => present,
-  }
-
-  package { "php-soap":
-    ensure  => present,
-  }
-
-  package { "php-xml":
-    ensure  => present,
-  }
-
-  package { "uuid-php":
-    ensure  => present,
+  package { [
+    'php',
+    'php-cli',
+    'php-common',
+    'php-devel',
+    'php-gd',
+    'php-mcrypt',
+    'php-intl',
+    'php-ldap',
+    'php-mbstring',
+    'php-mysql',
+    'php-pdo',
+    'php-pear',
+    'php-pecl-apc',
+    'php-soap',
+    'php-xml',
+    'uuid-php',
+  ]:
+  ensure => present,
   }
 
   package { "php-pecl-imagick":
@@ -245,7 +235,27 @@ class php {
     require => Exec["grab-epel"]
   }
 
+  
+  # upgrade pear
+  exec {"pear upgrade":
+    command => "/usr/bin/pear upgrade",
+    require => Package['php-pear'],
+  }
+  
+  # set channels to auto discover
+  exec { "pear auto_discover" :
+    command => "/usr/bin/pear config-set auto_discover 1",
+    require => [Package['php-pear']]
+  }
+  
+  # update channels
+  exec { "pear update-channels" :
+    command => "/usr/bin/pear update-channels",
+    require => [Package['php-pear']]
+  }
 }
+
+
 
 class phpmyadmin {
 
@@ -280,35 +290,10 @@ class phpmyadmin {
 
 }
 
-
-
-class rpmforge {
-  exec {
-    "/usr/bin/wget http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm":
-    alias   => "grab-rpmforge",
-  }
-
-  exec {
-    "/bin/rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt":
-    alias   => "import-key",
-    require => Exec["grab-rpmforge"],
-  }
-
-  exec {
-    "/bin/rpm -i rpmforge-release-0.5.2-2.el6.rf.*.rpm":
-    alias   => "install-rpmforge",
-    require => Exec["import-key"],
-  }
-
-  package { "libmcrypt-devel":
-  ensure  => present,
-    require => Exec["install-rpmforge"]
-  }
-}
-
+class { 'wordpress::install': }
 
 include iptables
-#include rpmforge
+include git
 include misc
 include httpd
 include phpdev
