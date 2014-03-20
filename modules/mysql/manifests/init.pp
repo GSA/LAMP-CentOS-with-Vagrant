@@ -22,18 +22,9 @@ class mysql::install {
     command     => "mysqladmin -uroot password ${password}",
   }
 
-  exec { 'Set MySQL to start on boot':
-     subscribe   => [
-      Package['mysql-server']
-    ],
-    refreshonly => true,
-    path        => '/bin:/usr/bin',
-    command     => "chkconfig --level 2345 mysqld on && service mysqld restart && chkconfig --list | grep mysqld", 
-  }
-
-
   service { "mysqld":
     ensure => running, 
+    enable    => true,
     require => Package["mysql-server"]
   }
 
