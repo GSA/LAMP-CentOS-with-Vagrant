@@ -68,108 +68,6 @@ class misc {
 }
 
 
-class httpd {
-
-  exec { 'yum-update':
-    command => '/usr/bin/yum -y update'
-  }
-
-  package { "httpd":
-    ensure => present
-  }
-
-  package { "httpd-devel":
-    ensure  => present
-  }
-
-  service { 'httpd':
-    name      => 'httpd',
-    require   => Package["httpd"],
-    ensure    => running,
-    enable    => true
-  }
-
-  file { "/etc/httpd/conf.d/vhost.conf":
-    owner   => "root",
-    group   => "root",
-    mode    => 644,
-    replace => true,
-    ensure  => present,
-    source  => "/vagrant/files/vhost.conf",
-    require => Package["httpd"],
-    notify  => Service["httpd"]
-  }
-
-}
-
-class phpdev {
-
-  package { "libxml2-devel":
-  ensure  => present,
-  }
-
-
-  package { "libXpm-devel":
-  ensure  => present,
-  }
-
-  package { "gmp-devel":
-  ensure  => present,
-  }
-
-  package { "libicu-devel":
-  ensure  => present,
-  }
-
-  package { "t1lib-devel":
-  ensure  => present,
-  }
-
-  package { "aspell-devel":
-  ensure  => present,
-  }
-
-  package { "openssl-devel":
-  ensure  => present,
-  }
-
-  package { "bzip2-devel":
-  ensure  => present,
-  }
-
-  package { "libcurl-devel":
-  ensure  => present,
-  }
-
-  package { "libjpeg-devel":
-  ensure  => present,
-  }
-
-  package { "libvpx-devel":
-  ensure  => present,
-  }
-
-  package { "libpng-devel":
-  ensure  => present,
-  }
-
-  package { "freetype-devel":
-  ensure  => present,
-  }
-
-  package { "readline-devel":
-  ensure  => present,
-  }
-
-  package { "libtidy-devel":
-  ensure  => present,
-  }
-
-  package { "libxslt-devel":
-  ensure  => present,
-  }
-}
-
 
 #Install MySQL
 
@@ -215,15 +113,15 @@ class php {
     'php-common',
     'php-devel',
     'php-gd',
-    'php-mcrypt',
+#    'php-mcrypt',
     'php-intl',
     'php-ldap',
     'php-mbstring',
     'php-mysql',
-    'php-pdo',
+#    'php-pdo',
     'php-pear',
     'php-pecl-apc',
-    'php-soap',
+ #   'php-soap',
     'php-xml',
     'uuid-php',
   ]:
@@ -256,47 +154,11 @@ class php {
 }
 
 
-
-class phpmyadmin {
-
-  package { "phpMyAdmin":
-    ensure  => present,
-  }
-
-  file { "/etc/httpd/conf.d/phpMyAdmin.conf":
-    owner   => "root",
-    group   => "root",
-    mode    => 644,
-    replace => true,
-    ensure  => present,
-    source  => "/vagrant/files/phpMyAdmin.conf",
-    require => Package["httpd"],
-
-    notify  => Service["httpd"],
-    ;
-  }
-
-  file { "/etc/phpMyAdmin/config.inc.php":
-    owner   => "root",
-    group   => "root",
-    mode    => 644,
-    replace => true,
-    ensure  => present,
-    source  => "/vagrant/files/phpmy_admin_config.inc.php",
-    require => Package["phpMyAdmin"]
-  }
-
-
-
-}
-
+class { 'httpd::install': }
 class { 'wordpress::install': }
 
 include iptables
 include git
 include misc
-include httpd
-include phpdev
 include mysql
 include php
-include phpmyadmin
