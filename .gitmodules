@@ -1,0 +1,3 @@
+[submodule "modules/wp"]
+	path = modules/wp
+	url = https://github.com/rmccue/puppet-wp.git

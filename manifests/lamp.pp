@@ -154,11 +154,14 @@ class php {
 }
 
 
+
 class { 'httpd::install': }
-class { 'wordpress::install': }
 
 include iptables
 include git
 include misc
 include mysql
 include php
+
+class { 'wp::cli': }
+class { 'wordpress::install': }
