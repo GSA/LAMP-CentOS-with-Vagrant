@@ -41,9 +41,19 @@ class wordpress::install {
 
   # Copy a working wp-config.php file for the vagrant setup.
   file { '/vagrant/wordpress/wp-config.php':
-    source => 'puppet:///modules/wordpress/wp-config.php'
+    source => 'puppet:///modules/wordpress/wp-config.php',
+    require => Exec['untar-wordpress'],
   }
+
+
+
   
+  # Copy a working wp-tests-config.php file for the vagrant setup.
+  file { '/vagrant/wordpress/wp-tests-config.php':
+    source => 'puppet:///modules/wordpress/wp-tests-config.php',
+    require => Exec['untar-wordpress'],
+  }
+
    # Create the Wordpress Unit Tests database
   exec { 'create-tests-database':
     unless  => '/usr/bin/mysql -u root -pvagrant wp_tests',
@@ -55,8 +65,5 @@ class wordpress::install {
     command => '/usr/bin/mysql -u root -pvagrant --execute="GRANT ALL PRIVILEGES ON wp_tests.* TO \'wordpress\'@\'localhost\' IDENTIFIED BY \'wordpress\'"',
   }
 
-  # Copy a working wp-tests-config.php file for the vagrant setup.
-  file { '/vagrant/wordpress/wp-tests-config.php':
-    source => 'puppet:///modules/wordpress/wp-tests-config.php'
-  }
+
 }

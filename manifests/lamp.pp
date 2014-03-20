@@ -1,4 +1,4 @@
-# Puppet manifest for my PHP dev machine
+# Puppet manifest for WordPress on CentOS
  
 
 
@@ -10,12 +10,8 @@ class iptables {
 
   service { "iptables":
     require => Package["iptables"],
-
     hasstatus => true,
     status => "true",
-
-    # hasrestart => false,
-
   }
 
   file { "/etc/sysconfig/iptables":
@@ -24,11 +20,8 @@ class iptables {
     mode    => 600,
     replace => true,
     ensure  => present,
-    # source  => "puppet:///files/iptables.txt",
     source  => "/vagrant/files/iptables.txt",
-    # content => template("puppet:///templates/iptables.txt"),
     require => Package["iptables"],
-
     notify  => Service["iptables"],
     ;
   }
@@ -46,7 +39,6 @@ class git {
   }
 
 }
-
 
 
 class misc {
@@ -69,99 +61,12 @@ class misc {
 
 
 
-#Install MySQL
-
-class mysql {
-
-  $password = 'vagrant'
-
-  package { [
-      'mysql',
-      'mysql-server',
-    ]:
-    ensure => installed,
-  }
-
-  exec { 'Set MySQL server\'s root password':
-    subscribe   => [
-      Package['mysql-server'],
-      Package['mysql'],
-    ],
-    refreshonly => true,
-    unless      => "mysqladmin -uroot -p${password} status",
-    path        => '/bin:/usr/bin',
-    command     => "mysqladmin -uroot password ${password}",
-  }
-
-  service { "mysqld":
-    ensure => running, 
-    require => Package["mysql-server"]
-  }
-
-
-}
-
-
-
-# Install PHP
-
-class php {
-
-  package { [
-    'php',
-    'php-cli',
-    'php-common',
-    'php-devel',
-    'php-gd',
-#    'php-mcrypt',
-    'php-intl',
-    'php-ldap',
-    'php-mbstring',
-    'php-mysql',
-#    'php-pdo',
-    'php-pear',
-    'php-pecl-apc',
- #   'php-soap',
-    'php-xml',
-    'uuid-php',
-  ]:
-  ensure => present,
-  }
-
-  package { "php-pecl-imagick":
-    ensure  => present,
-    require => Exec["grab-epel"]
-  }
-
-  
-  # upgrade pear
-  exec {"pear upgrade":
-    command => "/usr/bin/pear upgrade",
-    require => Package['php-pear'],
-  }
-  
-  # set channels to auto discover
-  exec { "pear auto_discover" :
-    command => "/usr/bin/pear config-set auto_discover 1",
-    require => [Package['php-pear']]
-  }
-  
-  # update channels
-  exec { "pear update-channels" :
-    command => "/usr/bin/pear update-channels",
-    require => [Package['php-pear']]
-  }
-}
-
-
+include iptables
+include misc
+include git
 
 class { 'httpd::install': }
-
-include iptables
-include git
-include misc
-include mysql
-include php
-
+class { 'mysql::install': }
+class { 'php::install': }
 class { 'wp::cli': }
 class { 'wordpress::install': }
