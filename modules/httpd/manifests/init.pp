@@ -16,12 +16,12 @@ class httpd::install {
     enable    => true
   }
 
-   file { '/etc/httpd/conf.d/default':
+   file { '/etc/httpd/conf.d/wordpress.conf':
     ensure  => file,
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    source  => '/vagrant/files/etc/httpd/vhosts/default',
+    source  => '/vagrant/files/etc/httpd/vhosts/wordpress.conf',
     require => Package['httpd'],
     notify  => Service['httpd']
   }
